@@ -44,6 +44,27 @@ function calculateScore(item: any, site: SiteConfig, prefs: UserPreferences): nu
     return score;
 }
 
+// Helper to clean textual content
+function cleanSummary(text: string | undefined): string {
+    if (!text) return '';
+
+    // Load into cheerio to strip HTML tags reliably
+    const $ = cheerio.load(text);
+    let cleaned = $.text();
+
+    // Normalize whitespace (remove newlines, excessive spaces)
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
+
+    // Filter out useless summaries
+    const lower = cleaned.toLowerCase();
+    if (lower === 'comments') return '';
+    if (lower.startsWith('comments on')) return '';
+    if (lower === 'read more') return '';
+    if (lower.length < 10) return ''; // Too short to be useful
+
+    return cleaned;
+}
+
 export async function fetchAllArticles(): Promise<Article[]> {
     const sites = getSites();
     const prefs = getPreferences();
@@ -56,21 +77,25 @@ export async function fetchAllArticles(): Promise<Article[]> {
             const feed = await parser.parseURL(site.url);
 
             const siteArticles = await Promise.all(feed.items.slice(0, 10).map(async (item) => {
-                // Try to find an image in content:encoded or enclosure
+                // 1. Try enclosure
                 let imageUrl = item.enclosure?.url;
 
-                // Simple regex to find img in content if no enclosure
-                if (!imageUrl && item.content) {
-                    const match = item.content.match(/src="([^"]+)"/);
-                    if (match) imageUrl = match[1];
+                // 2. Try parsing content for the first image
+                if (!imageUrl) {
+                    const contentToCheck = item.content || item['content:encoded'] || item.description || '';
+                    if (contentToCheck) {
+                        const $ = cheerio.load(contentToCheck);
+                        imageUrl = $('img').first().attr('src');
+                    }
                 }
 
-                // Fallback to scraping (limit concurrency in real app, but ok for now)
-                if (!imageUrl && item.link) {
-                    // await fetchMetadata(item.link); // Skipping to avoid fetching every page for now, too slow.
-                    // Maybe just use a placeholder or partial fetch logic if needed.
-                    // For prototype, we rely on feed images.
-                }
+                // 3. Get best summary
+                // Priority: contentSnippet -> description -> content
+                // We check each one through cleanSummary until we get a non-empty result
+                let summary = cleanSummary(item.contentSnippet);
+                if (!summary) summary = cleanSummary(item.description);
+                if (!summary) summary = cleanSummary(item.content);
+                if (!summary) summary = cleanSummary(item['content:encoded']);
 
                 const score = calculateScore(item, site, prefs);
 
@@ -82,10 +107,10 @@ export async function fetchAllArticles(): Promise<Article[]> {
                     sourceName: feed.title || site.url,
                     topic: site.category,
                     imageUrl: imageUrl,
+                    summary: summary.substring(0, 300) + (summary.length > 300 ? '...' : ''),
                     publishedAt: item.isoDate || new Date().toISOString(),
                     score
                 } as Article;
-
             }));
 
             allArticles.push(...siteArticles);

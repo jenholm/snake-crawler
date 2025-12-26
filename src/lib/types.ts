@@ -6,6 +6,7 @@ export interface Article {
     sourceName: string;
     topic: string;
     imageUrl?: string;
+    summary?: string;
     publishedAt: string; // ISO date
     score: number; // Calculated priority score
 }

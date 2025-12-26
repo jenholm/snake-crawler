@@ -13,6 +13,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { useState } from "react";
 
+const getDomain = (url: string) => {
+    try {
+        return new URL(url).hostname;
+    } catch {
+        return '';
+    }
+};
+
 interface ArticleCardProps {
     article: Article;
     onAction: (action: string, article: Article) => void;
@@ -20,6 +28,7 @@ interface ArticleCardProps {
 
 export function ArticleCard({ article, onAction }: ArticleCardProps) {
     const [clicked, setClicked] = useState(false);
+    const [imageError, setImageError] = useState(false);
 
     const handleClick = () => {
         setClicked(true);
@@ -34,16 +43,28 @@ export function ArticleCard({ article, onAction }: ArticleCardProps) {
                 className="relative h-48 w-full cursor-pointer overflow-hidden bg-muted"
                 onClick={handleClick}
             >
-                {article.imageUrl ? (
+                {article.imageUrl && !imageError ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                         src={article.imageUrl}
                         alt={article.title}
+                        onError={() => setImageError(true)}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                 ) : (
-                    <div className="flex h-full w-full items-center justify-center text-muted-foreground">
-                        No Image
+                    <div className="flex h-full w-full flex-col justify-between bg-gradient-to-br from-slate-50 to-slate-200 p-4 dark:from-slate-800 dark:to-slate-900">
+                        <p className="font-serif text-sm italic leading-relaxed text-muted-foreground line-clamp-4 opacity-80">
+                            &ldquo;{article.summary || article.title}&rdquo;
+                        </p>
+                        <div className="flex items-center gap-2 opacity-60">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                                src={`https://www.google.com/s2/favicons?domain=${getDomain(article.url)}&sz=64`}
+                                alt=""
+                                className="h-4 w-4 rounded-sm"
+                            />
+                            <span className="text-[10px] font-bold uppercase tracking-wider">{article.sourceName}</span>
+                        </div>
                     </div>
                 )}
 

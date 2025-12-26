@@ -1,0 +1,18 @@
+{
+  "blockedSites": [],
+  "demotedSites": [],
+  "demotedTopics": [],
+  "siteScores": {
+    "https://hackaday.com/blog/feed/": 1,
+    "https://www.aviationtoday.com/feed/": 1,
+    "https://www.nationalreview.com/feed/": 1,
+    "https://www.ifixit.com/blog/feed/": 2
+  },
+  "topicScores": {
+    "Electronics Prototyping": 0.5,
+    "Aviation": 0.5,
+    "Conservative News": 0.5,
+    "Auto Repair": 1
+  },
+  "clickHistory": []
+}
