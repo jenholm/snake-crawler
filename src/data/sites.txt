@@ -1,0 +1,11 @@
+https://news.ycombinator.com/rss|Programming
+https://dev.to/feed|Programming
+https://hackaday.com/blog/feed/|Electronics Prototyping
+https://www.ifixit.com/blog/feed/|Auto Repair
+https://www.anandtech.com/rss/|Electronics
+https://www.defense.gov/DesktopModules/ArticleCS/RSS.aspx?ContentType=1&Site=945|Military
+https://www.aviationtoday.com/feed/|Aviation
+https://www.rockpapershotgun.com/feed/topics/rts|Real Time Strategy Games
+https://www.flightsim.com/rss|Simulation Games
+https://www.nationalreview.com/feed/|Conservative News
+https://thefederalist.com/feed/|Conservative News
