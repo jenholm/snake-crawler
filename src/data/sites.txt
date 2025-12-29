@@ -1,11 +1,31 @@
+https://www.theverge.com/rss/index.xml|Tech
+https://www.wired.com/feed/rss|Tech
+https://techcrunch.com/feed/|Tech
+https://arstechnica.com/feed/|Tech
+https://www.engadget.com/rss.xml|Tech
+https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml|Tech
+https://www.polygon.com/rss/index.xml|Gaming
+https://www.eurogamer.net/feed/news|Gaming
+https://kotaku.com/rss|Gaming
+https://www.gamespot.com/feeds/news/|Gaming
+https://www.ign.com/rss/articles.xml|Gaming
+https://www.pcgamer.com/rss/|Gaming
+https://feeds.simplecast.com/54nAGcIl|Podcast
+https://rss.nytimes.com/services/xml/rss/nyt/World.xml|News
+https://feeds.bbci.co.uk/news/world/rss.xml|News
+https://www.aljazeera.com/xml/rss/all.xml|News
+https://www.npr.org/rss/rss.php?id=1001|News
+https://cdn.feedcontrol.net/http/www.reuters.com/rssFeed/worldNews|News
+https://www.science.org/rss/news_current.xml|Science
+https://www.nasa.gov/rss/dyn/breaking_news.rss|Science
+https://www.space.com/feeds/all|Science
+https://www.scientificamerican.com/rss/feed.xml|Science
 https://news.ycombinator.com/rss|Programming
 https://dev.to/feed|Programming
-https://hackaday.com/blog/feed/|Electronics Prototyping
-https://www.ifixit.com/blog/feed/|Auto Repair
-https://www.anandtech.com/rss/|Electronics
+https://hackaday.com/blog/feed/|Electronics
+https://www.ifixit.com/blog/feed/|DIY
+https://www.smashingmagazine.com/feed/|Design
+https://css-tricks.com/feed/|Design
+https://alistapart.com/main/feed/|Design
 https://www.defense.gov/DesktopModules/ArticleCS/RSS.aspx?ContentType=1&Site=945|Military
 https://www.aviationtoday.com/feed/|Aviation
-https://www.rockpapershotgun.com/feed/topics/rts|Real Time Strategy Games
-https://www.flightsim.com/rss|Simulation Games
-https://www.nationalreview.com/feed/|Conservative News
-https://thefederalist.com/feed/|Conservative News

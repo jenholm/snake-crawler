@@ -4,7 +4,13 @@ import axios from 'axios';
 import { Article, SiteConfig, UserPreferences } from './types';
 import { getPreferences, getSites } from './storage';
 
-const parser = new Parser();
+const parser = new Parser({
+    customFields: {
+        item: [
+            ['media:group', 'mediaGroup'],
+        ],
+    },
+});
 
 // Helper to get OgImage if not in RSS
 async function fetchMetadata(url: string): Promise<{ imageUrl?: string }> {
@@ -74,11 +80,44 @@ export async function fetchAllArticles(): Promise<Article[]> {
         if (prefs.blockedSites.includes(site.url)) return;
 
         try {
-            const feed = await parser.parseURL(site.url);
+            // Manual fetch to handle UAs and check for HTML
+            const response = await axios.get(site.url, {
+                timeout: 5000,
+                headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+                    'Accept': 'application/rss+xml, application/xml, text/xml, */*'
+                }
+            });
 
-            const siteArticles = await Promise.all(feed.items.slice(0, 10).map(async (item) => {
-                // 1. Try enclosure
-                let imageUrl = item.enclosure?.url;
+            const data = response.data;
+            if (typeof data === 'string' && (data.trim().startsWith('<!DOCTYPE html') || data.trim().startsWith('<html'))) {
+                throw new Error('Received HTML webpage instead of RSS feed (likely blocked or invalid URL)');
+            }
+
+            const feed = await parser.parseString(data);
+
+            const siteArticles = await Promise.all(feed.items.slice(0, 50).map(async (item: any) => {
+                // 0. Try YouTube specific thumbnail (media:group -> media:thumbnail)
+                let imageUrl;
+
+                // Use the custom field 'mediaGroup' we configured
+                const mediaGroup = item.mediaGroup;
+                if (mediaGroup && mediaGroup['media:thumbnail']) {
+                    const thumbs = mediaGroup['media:thumbnail'];
+                    // YouTube usually gives an array of thumbnails, take the first one (often highest res or default)
+                    const thumb = Array.isArray(thumbs) ? thumbs[0] : thumbs;
+
+                    if (thumb) {
+                        // Check for direct properties or nested '$' properties (common in xml2js)
+                        if (thumb.url) imageUrl = thumb.url;
+                        else if (thumb['$'] && thumb['$'].url) imageUrl = thumb['$'].url;
+                    }
+                }
+
+                // 1. Try enclosure (if no YouTube match)
+                if (!imageUrl) {
+                    imageUrl = item.enclosure?.url;
+                }
 
                 // 2. Try parsing content for the first image
                 if (!imageUrl) {
@@ -114,15 +153,25 @@ export async function fetchAllArticles(): Promise<Article[]> {
             }));
 
             allArticles.push(...siteArticles);
-        } catch (e) {
-            console.error(`Failed to scrape ${site.url}:`, e);
+
+        } catch (e: any) {
+            // Simplify error message for HTML/XML issues
+            let msg = e.message;
+            if (msg.includes('Attribute without value') || msg.includes('Unexpected close tag')) {
+                msg = 'Invalid XML or HTML response';
+            }
+            console.error(`Failed to scrape ${site.url}: ${msg}`);
         }
     });
 
     await Promise.all(promises);
 
-    // Global Sort and Limit
-    return allArticles
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 100);
+    // Shuffle the results for discovery
+    for (let i = allArticles.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [allArticles[i], allArticles[j]] = [allArticles[j], allArticles[i]];
+    }
+
+    // Return random selection up to limit
+    return allArticles.slice(0, 200);
 }
