@@ -200,8 +200,14 @@ export async function fetchAllArticles(): Promise<Article[]> {
                         const thumbs = mediaGroup['media:thumbnail'];
                         const thumb = Array.isArray(thumbs) ? thumbs[0] : thumbs;
                         if (thumb) {
-                            if (thumb.url) imageUrl = thumb.url;
-                            else if (thumb['$'] && thumb['$'].url) imageUrl = thumb['$'].url;
+                            // Check for direct properties or nested '$' properties (common in xml2js)
+                            let foundUrl = thumb.url;
+                            if (!foundUrl && thumb['$'] && thumb['$'].url) foundUrl = thumb['$'].url;
+
+                            if (foundUrl) {
+                                // Upgrade to HD if possible using standard YouTube matching
+                                imageUrl = foundUrl.replace('hqdefault.jpg', 'maxresdefault.jpg');
+                            }
                         }
                     }
 
