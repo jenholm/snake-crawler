@@ -259,6 +259,26 @@ export async function fetchAllArticles(): Promise<Article[]> {
         [allArticles[i], allArticles[j]] = [allArticles[j], allArticles[i]];
     }
 
+    // Deduplicate articles based on URL and ID
+    const uniqueArticles: Article[] = [];
+    const seenIds = new Set<string>();
+    const seenUrls = new Set<string>();
+
+    for (const article of allArticles) {
+        // Prepare checks
+        const id = article.id;
+        const url = article.url;
+
+        // If we have a real URL, ensure it's unique
+        if (url && seenUrls.has(url)) continue;
+        // If ID is already used, skip (or generate new? Better to skip dupes)
+        if (seenIds.has(id)) continue;
+
+        seenIds.add(id);
+        if (url) seenUrls.add(url);
+        uniqueArticles.push(article);
+    }
+
     // Return random selection up to limit
-    return allArticles.slice(0, 200);
+    return uniqueArticles.slice(0, 200);
 }
