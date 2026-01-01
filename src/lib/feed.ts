@@ -8,6 +8,9 @@ const parser = new Parser({
     customFields: {
         item: [
             ['media:group', 'mediaGroup'],
+            ['media:content', 'mediaContent'],
+            ['media:thumbnail', 'mediaThumbnail'],
+            ['enc:enclosure', 'encEnclosure'],
         ],
     },
 });
@@ -26,6 +29,50 @@ function cleanSummary(text: string | undefined): string {
     if (lower === 'read more') return '';
     if (lower.length < 10) return '';
     return cleaned;
+}
+
+// Helper to identify if a URL is likely an image (not video)
+function isImageUrl(url: string | undefined): boolean {
+    if (!url) return false;
+    const lower = url.toLowerCase();
+    // Skip common video formats that og:image sometimes returns
+    if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || lower.endsWith('.ogv')) return false;
+    return true;
+}
+
+// Deep scraping for images if RSS fails
+async function getMetaImage(url: string): Promise<string | undefined> {
+    if (!url || !url.startsWith('http')) return undefined;
+    try {
+        const res = await axios.get(url, {
+            timeout: 5000,
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Referer': 'https://www.google.com/'
+            }
+        });
+        const $ = cheerio.load(res.data);
+        let img = $('meta[property="og:image"]').attr('content') ||
+            $('meta[name="twitter:image"]').attr('content') ||
+            $('link[rel="image_src"]').attr('href');
+
+        if (img) {
+            // Normalize relative URLs
+            if (!img.startsWith('http')) {
+                try {
+                    img = new URL(img, url).href;
+                } catch { return undefined; }
+            }
+            // Filter out videos
+            if (!isImageUrl(img)) return undefined;
+        }
+
+        return img;
+    } catch {
+        return undefined;
+    }
 }
 
 function calculateScore(item: any, site: SiteConfig, prefs: UserPreferences): number {
@@ -192,7 +239,7 @@ export async function fetchAllArticles(): Promise<Article[]> {
         // Step 3: Parse Feed Items if we have a feed
         if (finalFeed) {
             try {
-                const siteArticles = await Promise.all(finalFeed.items.slice(0, 50).map(async (item: any) => {
+                const siteArticles = await Promise.all(finalFeed.items.slice(0, 50).map(async (item: any, index: number) => {
                     // 0. Try YouTube specific thumbnail (media:group -> media:thumbnail)
                     let imageUrl;
                     const mediaGroup = item.mediaGroup;
@@ -211,10 +258,31 @@ export async function fetchAllArticles(): Promise<Article[]> {
                         }
                     }
 
-                    // 1. Try enclosure (if no YouTube match)
+                    // 1. Try media:content (Ars Technica, TechCrunch, etc.)
+                    if (!imageUrl && item.mediaContent) {
+                        const content = Array.isArray(item.mediaContent) ? item.mediaContent[0] : item.mediaContent;
+                        if (content.url) imageUrl = content.url;
+                        else if (content['$'] && content['$'].url) imageUrl = content['$'].url;
+                    }
+
+                    // 2. Try media:thumbnail (Standard RSS)
+                    if (!imageUrl && item.mediaThumbnail) {
+                        const thumb = Array.isArray(item.mediaThumbnail) ? item.mediaThumbnail[0] : item.mediaThumbnail;
+                        if (thumb.url) imageUrl = thumb.url;
+                        else if (thumb['$'] && thumb['$'].url) imageUrl = thumb['$'].url;
+                    }
+
+                    // 3. Try enc:enclosure (Science.org)
+                    if (!imageUrl && item.encEnclosure) {
+                        const enc = Array.isArray(item.encEnclosure) ? item.encEnclosure[0] : item.encEnclosure;
+                        if (enc['$'] && enc['$']['rdf:resource']) imageUrl = enc['$']['rdf:resource'];
+                        else if (enc.resource) imageUrl = enc.resource;
+                    }
+
+                    // 4. Try enclosure
                     if (!imageUrl) imageUrl = item.enclosure?.url;
 
-                    // 2. Try parsing content for the first image
+                    // 5. Try parsing content for the first image
                     if (!imageUrl) {
                         const contentToCheck = item.content || item['content:encoded'] || item.description || '';
                         if (contentToCheck) {
@@ -223,7 +291,16 @@ export async function fetchAllArticles(): Promise<Article[]> {
                         }
                     }
 
-                    // 3. Get best summary
+                    // 6. Deep Scraping Fallback (Meta Tags) - Only for the first 10 items to avoid network spray
+                    if ((!imageUrl || !isImageUrl(imageUrl)) && (item.link || item.guid) && index < 10) {
+                        const metaImg = await getMetaImage(item.link || item.guid);
+                        if (metaImg) imageUrl = metaImg;
+                    }
+
+                    // 7. Final Validation
+                    if (!isImageUrl(imageUrl)) imageUrl = undefined;
+
+                    // 8. Get best summary
                     let summary = cleanSummary(item.contentSnippet);
                     if (!summary) summary = cleanSummary(item.description);
                     if (!summary) summary = cleanSummary(item.content);
@@ -233,7 +310,7 @@ export async function fetchAllArticles(): Promise<Article[]> {
 
                     return {
                         id: item.link || item.guid || Math.random().toString(),
-                        title: item.title || 'Untitled',
+                        title: (item.title || 'Untitled').replace(/\s+/g, ' ').trim(),
                         url: item.link || '',
                         sourceId: site.url,
                         sourceName: finalFeed.title || site.url,

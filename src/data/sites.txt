@@ -30,3 +30,5 @@ https://alistapart.com/main/feed/|Design
 https://www.defense.gov/DesktopModules/ArticleCS/RSS.aspx?ContentType=1&Site=945|Military
 https://www.aviationtoday.com/feed/|Aviation
 https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ|Technically YouTube
+
+https://thefederalist.com/|conservative news
