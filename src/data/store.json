@@ -1,22 +1,53 @@
 {
   "blockedSites": [
-    "https://news.ycombinator.com/rss"
+    "https://news.ycombinator.com/rss",
+    "https://rss.nytimes.com/services/xml/rss/nyt/World.xml",
+    "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml",
+    "https://www.theverge.com/rss/index.xml",
+    "https://www.wired.com/feed/rss",
+    "https://www.scientificamerican.com/rss/feed.xml",
+    "https://www.npr.org/rss/rss.php?id=1001"
   ],
   "demotedSites": [],
   "demotedTopics": [],
   "siteScores": {
     "https://hackaday.com/blog/feed/": 2,
-    "https://www.aviationtoday.com/feed/": 2,
+    "https://www.aviationtoday.com/feed/": 3,
     "https://www.nationalreview.com/feed/": 1,
-    "https://www.ifixit.com/blog/feed/": 6,
-    "https://news.ycombinator.com/rss": 1
+    "https://www.ifixit.com/blog/feed/": 9,
+    "https://news.ycombinator.com/rss": 1,
+    "https://alistapart.com/main/feed/": 3,
+    "https://feeds.bbci.co.uk/news/world/rss.xml": 4,
+    "https://www.scientificamerican.com/rss/feed.xml": 5,
+    "https://feeds.simplecast.com/54nAGcIl": 2,
+    "https://www.gamespot.com/feeds/news/": 1,
+    "https://www.ign.com/rss/articles.xml": 3,
+    "https://www.space.com/feeds/all": 4,
+    "https://www.pcgamer.com/rss/": 2,
+    "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml": 1,
+    "https://www.engadget.com/rss.xml": 3,
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ": 1,
+    "https://www.npr.org/rss/rss.php?id=1001": 1,
+    "https://www.smashingmagazine.com/feed/": 1,
+    "https://arstechnica.com/feed/": 1,
+    "https://techcrunch.com/feed/": 1,
+    "https://www.science.org/rss/news_current.xml": 2,
+    "https://www.nasa.gov/rss/dyn/breaking_news.rss": 1
   },
   "topicScores": {
     "Electronics Prototyping": 1,
-    "Aviation": 1,
+    "Aviation": 1.5,
     "Conservative News": 0.5,
     "Auto Repair": 3,
-    "Programming": 0.5
+    "Programming": 0.5,
+    "Design": 2,
+    "News": 2.5,
+    "Science": 6,
+    "Podcast": 1,
+    "Gaming": 3,
+    "Tech": 3,
+    "DIY": 1.5,
+    "Technically YouTube": 0.5
   },
   "clickHistory": []
 }

@@ -32,3 +32,4 @@ https://www.aviationtoday.com/feed/|Aviation
 https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ|Technically YouTube
 
 https://thefederalist.com/|conservative news
+https://www.conservapedia.com/Main_Page|Uncategorized
