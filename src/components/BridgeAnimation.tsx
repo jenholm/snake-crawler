@@ -37,8 +37,8 @@ export const BridgeAnimation: React.FC = () => {
             // Define bridge shape points
             const points: { x: number, y: number }[] = [];
 
-            // Towers
-            for (let y = 10; y < 50; y += 4) {
+            // Towers (Extended below the deck at y=40)
+            for (let y = 10; y < 58; y += 4) {
                 points.push({ x: 30, y });
                 points.push({ x: 90, y });
             }
