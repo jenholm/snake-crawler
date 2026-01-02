@@ -48,10 +48,11 @@ export const BridgeAnimation: React.FC = () => {
                 points.push({ x, y: 40 });
             }
 
-            // Main Cable (Parabola)
+            // Main Cable (Hanging)
             for (let x = 30; x <= 90; x += 3) {
                 const normalizedX = (x - 60) / 30; // -1 to 1
-                const y = 20 + (normalizedX * normalizedX) * 20; // Parabola
+                // Hanging: High at towers, dips in center
+                const y = 15 + (1 - (normalizedX * normalizedX)) * 25;
                 points.push({ x, y });
             }
 
@@ -81,7 +82,7 @@ export const BridgeAnimation: React.FC = () => {
 
                 if (p.opacity < 0.8) p.opacity += 0.01;
 
-                ctx.fillStyle = `rgba(59, 130, 246, ${p.opacity})`; // blue-500
+                ctx.fillStyle = `rgba(0, 0, 0, ${p.opacity})`; // Black
                 ctx.fillText(p.char, p.x, p.y);
             });
 
