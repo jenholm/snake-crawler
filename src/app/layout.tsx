@@ -7,6 +7,9 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "Snake Crawler",
   description: "Aggregated news dashboard",
+  icons: {
+    icon: "/bridge-icon.png",
+  },
 };
 
 export default function RootLayout({
