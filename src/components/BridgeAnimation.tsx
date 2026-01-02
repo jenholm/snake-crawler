@@ -57,17 +57,17 @@ export const BridgeAnimation: React.FC = () => {
 
             // Left Side Span (Anchorage to Left Tower)
             for (let x = 10; x <= 30; x += 3) {
-                const normalizedX = (x - 10) / 20; // 0 to 1
-                // Curve from (10, 40) to (30, 15)
-                const y = 40 - (normalizedX * normalizedX) * 25;
+                const norm = (x - 10) / 20;
+                // Linear chord + a parabolic sag
+                const y = (40 - 25 * norm) + (10 * norm * (1 - norm) * 4);
                 points.push({ x, y });
             }
 
             // Right Side Span (Right Tower to Anchorage)
             for (let x = 90; x <= 110; x += 3) {
-                const normalizedX = (x - 90) / 20; // 0 to 1
-                // Curve from (90, 15) to (110, 40)
-                const y = 15 + (normalizedX * normalizedX) * 25;
+                const norm = (x - 90) / 20;
+                // Linear chord + a parabolic sag
+                const y = (15 + 25 * norm) + (10 * norm * (1 - norm) * 4);
                 points.push({ x, y });
             }
 
