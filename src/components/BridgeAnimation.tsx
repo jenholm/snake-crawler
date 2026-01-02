@@ -48,11 +48,26 @@ export const BridgeAnimation: React.FC = () => {
                 points.push({ x, y: 40 });
             }
 
-            // Main Cable (Hanging)
+            // Main Cable (Hanging center span)
             for (let x = 30; x <= 90; x += 3) {
                 const normalizedX = (x - 60) / 30; // -1 to 1
-                // Hanging: High at towers, dips in center
                 const y = 15 + (1 - (normalizedX * normalizedX)) * 25;
+                points.push({ x, y });
+            }
+
+            // Left Side Span (Anchorage to Left Tower)
+            for (let x = 10; x <= 30; x += 3) {
+                const normalizedX = (x - 10) / 20; // 0 to 1
+                // Curve from (10, 40) to (30, 15)
+                const y = 40 - (normalizedX * normalizedX) * 25;
+                points.push({ x, y });
+            }
+
+            // Right Side Span (Right Tower to Anchorage)
+            for (let x = 90; x <= 110; x += 3) {
+                const normalizedX = (x - 90) / 20; // 0 to 1
+                // Curve from (90, 15) to (110, 40)
+                const y = 15 + (normalizedX * normalizedX) * 25;
                 points.push({ x, y });
             }
 
