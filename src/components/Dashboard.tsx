@@ -176,6 +176,10 @@ export function Dashboard() {
                     ))}
                 </div>
             )}
+
+            <footer className="mt-16 border-t py-8 text-center text-muted-foreground text-sm">
+                <p>© {new Date().getFullYear()} Enholm Heuristics. All rights reserved.</p>
+            </footer>
         </div>
     );
 }
