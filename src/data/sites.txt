@@ -1,3 +1,7 @@
+
+https://thefederalist.com/|conservative news
+https://www.breitbart.com/|conservative news
+https://www.conservapedia.com/Main_Page|Uncategorized
 https://www.theverge.com/rss/index.xml|Tech
 https://www.wired.com/feed/rss|Tech
 https://techcrunch.com/feed/|Tech
@@ -30,6 +34,3 @@ https://alistapart.com/main/feed/|Design
 https://www.defense.gov/DesktopModules/ArticleCS/RSS.aspx?ContentType=1&Site=945|Military
 https://www.aviationtoday.com/feed/|Aviation
 https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ|Technically YouTube
-
-https://thefederalist.com/|conservative news
-https://www.conservapedia.com/Main_Page|Uncategorized

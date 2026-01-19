@@ -8,59 +8,220 @@
     "https://www.scientificamerican.com/rss/feed.xml",
     "https://www.npr.org/rss/rss.php?id=1001"
   ],
-  "demotedSites": [],
-  "demotedTopics": [],
+  "demotedSites": [
+    "https://www.engadget.com/rss.xml"
+  ],
+  "demotedTopics": [
+    "Science",
+    "Gaming"
+  ],
   "siteScores": {
     "https://hackaday.com/blog/feed/": 2,
     "https://www.aviationtoday.com/feed/": 3,
     "https://www.nationalreview.com/feed/": 1,
-    "https://www.ifixit.com/blog/feed/": 9,
+    "https://www.ifixit.com/blog/feed/": 10,
     "https://news.ycombinator.com/rss": 1,
     "https://alistapart.com/main/feed/": 3,
     "https://feeds.bbci.co.uk/news/world/rss.xml": 4,
     "https://www.scientificamerican.com/rss/feed.xml": 5,
     "https://feeds.simplecast.com/54nAGcIl": 2,
     "https://www.gamespot.com/feeds/news/": 1,
-    "https://www.ign.com/rss/articles.xml": 3,
+    "https://www.ign.com/rss/articles.xml": 4,
     "https://www.space.com/feeds/all": 4,
-    "https://www.pcgamer.com/rss/": 2,
+    "https://www.pcgamer.com/rss/": 5,
     "https://rss.nytimes.com/services/xml/rss/nyt/Technology.xml": 1,
-    "https://www.engadget.com/rss.xml": 3,
+    "https://www.engadget.com/rss.xml": 7,
     "https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ": 1,
     "https://www.npr.org/rss/rss.php?id=1001": 1,
     "https://www.smashingmagazine.com/feed/": 1,
     "https://arstechnica.com/feed/": 1,
     "https://techcrunch.com/feed/": 1,
     "https://www.science.org/rss/news_current.xml": 2,
-    "https://www.nasa.gov/rss/dyn/breaking_news.rss": 1
+    "https://www.nasa.gov/rss/dyn/breaking_news.rss": 1,
+    "https://dev.to/feed": 1
   },
   "topicScores": {
     "Electronics Prototyping": 1,
     "Aviation": 1.5,
     "Conservative News": 0.5,
     "Auto Repair": 3,
-    "Programming": 0.5,
+    "Programming": 1,
     "Design": 2,
     "News": 2.5,
     "Science": 6,
     "Podcast": 1,
-    "Gaming": 3,
-    "Tech": 3,
-    "DIY": 1.5,
+    "Gaming": 5,
+    "Tech": 5,
+    "DIY": 2,
     "Technically YouTube": 0.5
   },
   "clickHistory": [],
   "interestModel": {
-    "stablePreferences": "I am interested in space exploration, rocket launches, NASA missions, and the latest in science and technology. I also enjoy gaming and exploring programming languages in software development.",
-    "sessionIntent": "Exploring programming languages in software development"
+    "stablePreferences": "I am interested in space exploration, rocket launches, NASA missions, and the latest in science and technology. I also enjoy gaming and exploring programming languages in software development. I have a specific interest in technology showcased in the iFixit App as well as British comedian-packed space comedy like Earth Must Die. I am also interested in the practical applications of Anthropic's coding AI for regular people in software development.",
+    "sessionIntent": "Exploring practical applications of Anthropic's coding AI for software development"
   },
   "sourceReputation": {
     "https://www.ifixit.com/blog/feed/": {
       "passRate": 1,
-      "avgScore": 80,
+      "avgScore": 132.96051702261474,
       "userEngagement": 0,
-      "totalTriaged": 1
+      "totalTriaged": 8
+    },
+    "https://www.space.com/feeds/all": {
+      "passRate": 1,
+      "avgScore": 43.41351283905659,
+      "userEngagement": 0,
+      "totalTriaged": 44
+    },
+    "https://www.gamespot.com/feeds/news/": {
+      "passRate": 1,
+      "avgScore": 26.612778080636712,
+      "userEngagement": 0,
+      "totalTriaged": 24
+    },
+    "https://kotaku.com/rss": {
+      "passRate": 1,
+      "avgScore": 24.059855600256885,
+      "userEngagement": 0,
+      "totalTriaged": 9
+    },
+    "https://www.engadget.com/rss.xml": {
+      "passRate": 1,
+      "avgScore": 51.619351431399444,
+      "userEngagement": 0,
+      "totalTriaged": 25
+    },
+    "https://arstechnica.com/feed/": {
+      "passRate": 1,
+      "avgScore": 105.65960664124059,
+      "userEngagement": 0,
+      "totalTriaged": 11
+    },
+    "https://www.smashingmagazine.com/feed/": {
+      "passRate": 1,
+      "avgScore": 95.79944732420309,
+      "userEngagement": 0,
+      "totalTriaged": 23
+    },
+    "https://techcrunch.com/feed/": {
+      "passRate": 1,
+      "avgScore": 112.53659594651238,
+      "userEngagement": 0,
+      "totalTriaged": 13
+    },
+    "https://feeds.bbci.co.uk/news/world/rss.xml": {
+      "passRate": 1,
+      "avgScore": 110.43374037396744,
+      "userEngagement": 0,
+      "totalTriaged": 17
+    },
+    "https://www.pcgamer.com/rss/": {
+      "passRate": 1,
+      "avgScore": 42.99251298878069,
+      "userEngagement": 0,
+      "totalTriaged": 31
+    },
+    "https://www.nasa.gov/rss/dyn/breaking_news.rss": {
+      "passRate": 1,
+      "avgScore": 32.08803351907491,
+      "userEngagement": 0,
+      "totalTriaged": 9
+    },
+    "https://www.eurogamer.net/feed/news": {
+      "passRate": 1,
+      "avgScore": 24.388253009151427,
+      "userEngagement": 0,
+      "totalTriaged": 30
+    },
+    "https://hackaday.com/blog/feed/": {
+      "passRate": 1,
+      "avgScore": 105.84712193481968,
+      "userEngagement": 0,
+      "totalTriaged": 4
+    },
+    "https://www.aviationtoday.com/feed/": {
+      "passRate": 1,
+      "avgScore": 109.58051159865116,
+      "userEngagement": 0,
+      "totalTriaged": 8
+    },
+    "https://www.aljazeera.com/xml/rss/all.xml": {
+      "passRate": 1,
+      "avgScore": 97.48718949610908,
+      "userEngagement": 0,
+      "totalTriaged": 13
+    },
+    "https://www.polygon.com/rss/index.xml": {
+      "passRate": 1,
+      "avgScore": 34.91650873480866,
+      "userEngagement": 0,
+      "totalTriaged": 5
+    },
+    "https://www.breitbart.com/": {
+      "passRate": 1,
+      "avgScore": 85.17567476080075,
+      "userEngagement": 0,
+      "totalTriaged": 22
+    },
+    "https://www.science.org/rss/news_current.xml": {
+      "passRate": 1,
+      "avgScore": 40.868754286488944,
+      "userEngagement": 0,
+      "totalTriaged": 3
+    },
+    "https://dev.to/feed": {
+      "passRate": 1,
+      "avgScore": 98.99303064755388,
+      "userEngagement": 0,
+      "totalTriaged": 8
+    },
+    "https://css-tricks.com/feed/": {
+      "passRate": 1,
+      "avgScore": 97.99375138645411,
+      "userEngagement": 0,
+      "totalTriaged": 9
+    },
+    "https://alistapart.com/main/feed/": {
+      "passRate": 1,
+      "avgScore": 101.52104740226675,
+      "userEngagement": 0,
+      "totalTriaged": 11
+    },
+    "https://www.ign.com/rss/articles.xml": {
+      "passRate": 1,
+      "avgScore": 41.49173860590737,
+      "userEngagement": 0,
+      "totalTriaged": 8
+    },
+    "https://www.youtube.com/feeds/videos.xml?channel_id=UCBJycsmduvYEL83R_U4JriQ": {
+      "passRate": 1,
+      "avgScore": 103.92978337430861,
+      "userEngagement": 0,
+      "totalTriaged": 4
     }
   },
-  "pendingQuestions": []
+  "pendingQuestions": [
+    {
+      "id": "2",
+      "question": "What are the significant updates in the RuneScape game for its 25th anniversary?",
+      "options": [
+        "Microtransaction changes",
+        "Combat system rework",
+        "Other 'integrity-focused releases'",
+        "All of the above"
+      ],
+      "context": "RuneScape details its plans to scrap its 'Treasure Hunter' microtransactions, rework combat, and dole out other 'integrity-focused releases' for its 25th anniversary",
+      "topic": "gaming"
+    },
+    {
+      "id": "q2",
+      "question": "In the realm of space exploration, would you prefer to learn about the Hubble's latest stellar baby pictures or the managers' concerns about 'launch fever' for NASA's Moon mission?",
+      "options": [
+        "Hubble's latest stellar baby pictures",
+        "Managers' concerns about 'launch fever' for NASA's Moon mission"
+      ],
+      "context": "Aligning with your interest in space exploration and NASA missions",
+      "topic": "Science"
+    }
+  ]
 }

@@ -1,6 +1,6 @@
 import OpenAI from 'openai';
 import { Article, InterestModel, ScoringRubric, ContentCard, MicroQuestion } from './types';
-import { savePreferences, getPreferences, updateSourceReputation } from './storage';
+import { savePreferences, getPreferences, updateSourceReputation, getCategories } from './storage';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -13,6 +13,7 @@ export async function generateRubric(interestModel: InterestModel): Promise<Scor
     if (!process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY.includes('your_openai_api_key_here')) return null;
 
     try {
+        const categories = getCategories();
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo-0125",
             messages: [
@@ -21,10 +22,12 @@ export async function generateRubric(interestModel: InterestModel): Promise<Scor
                     content: `You are an AI architect. Convert the user's interest profile into a deterministic scoring rubric.
 Stable Preferences: "${interestModel.stablePreferences}"
 Session Intent: "${interestModel.sessionIntent}"
+Available Categories in Feed: [${categories.join(', ')}]
 
+Goal: Score articles. Reward user interests highly, but ensure categories from the feed are not unfairly penalized if they are neutral.
 Output a JSON object:
 {
-  "version": 3,
+  "version": 4,
   "topicWeights": {"topic_name": weight_0_to_1},
   "noveltyPreference": 0.5,
   "technicalDepthPreference": 0.5,
@@ -256,8 +259,8 @@ export async function scoreArticlesWithAI(articles: Article[]): Promise<Article[
 
     // 1. Triage (Metadata only)
     console.log(`[AI Scoring] Triaging ${articles.length} articles...`);
-    const triaged = await triageArticles(articles, rubric);
-    const pool = triaged.filter(a => a.triageStatus !== 'reject');
+    const triageResults = await triageArticles(articles, rubric);
+    const pool = triageResults.filter(a => a.triageStatus !== 'reject');
     console.log(`[AI Scoring] Triage complete. Pool size: ${pool.length} (Rejected ${articles.length - pool.length})`);
 
     if (pool.length === 0) {
@@ -265,19 +268,50 @@ export async function scoreArticlesWithAI(articles: Article[]): Promise<Article[
         return articles;
     }
 
-    // 2. Content Card Extraction (Only for high-potential items)
-    const goodArticles = pool.filter(a => a.triageStatus === 'good').slice(0, 10);
-    await Promise.all(goodArticles.map(async (article) => {
+    // 2. High-Quality Selection (Stratified Sampling for Diversity)
+    // We want to ensure articles from every source have a chance at the AI pass
+    if (pool.length === 0) {
+        console.log(`[AI Scoring] Triage rejected everything. Fallback to original pool.`);
+        return articles;
+    }
+
+    const sourceGroups = new Map<string, Article[]>();
+    pool.forEach(a => {
+        const group = sourceGroups.get(a.sourceId) || [];
+        group.push(a);
+        sourceGroups.set(a.sourceId, group);
+    });
+
+    const candidateSet = new Set<Article>();
+
+    // Pick top 2 from each source
+    sourceGroups.forEach((group) => {
+        group.sort((a, b) => b.score - a.score);
+        group.slice(0, 2).forEach(a => candidateSet.add(a));
+    });
+
+    // Fill the rest with globally top articles up to 100
+    const remainingPool = pool.filter(a => !candidateSet.has(a));
+    remainingPool.sort((a, b) => b.score - a.score);
+
+    const fillCount = Math.max(0, 100 - candidateSet.size);
+    remainingPool.slice(0, fillCount).forEach(a => candidateSet.add(a));
+
+    const candidates = Array.from(candidateSet);
+    const candidateIds = new Set(candidates.map(a => a.id));
+    const nonCandidates = pool.filter(a => !candidateIds.has(a.id));
+
+    console.log(`[AI Scoring] Stratified candidates: ${candidates.length}. Passive feed: ${nonCandidates.length}`);
+
+    // 3. Content Card Extraction (Only for high-potential items)
+    // This should happen for the candidates selected for detailed scoring
+    await Promise.all(candidates.map(async (article) => {
         if (article.fullText && !article.contentCard) {
             article.contentCard = await extractContentCard(article) || undefined;
         }
     }));
 
-    // 3. Final Scoring (Limit to top 50 candidates to avoid timeouts/costs)
-    const candidates = pool.sort((a, b) => b.score - a.score).slice(0, 50);
-    const nonCandidates = pool.slice(50);
-
-    console.log(`[AI Scoring] Detailed scoring top 50 candidates...`);
+    console.log(`[AI Scoring] Detailed scoring top ${candidates.length} candidates...`);
     const batchSize = 10;
     const scoredCandidates: Article[] = [];
 
@@ -376,20 +410,32 @@ Output JSON: {"scores": [{"idx": 0, "overall": 0.8, "topic_match": 0.9, "novelty
 export async function generateMicroQuestions(articles: Article[], rubric: ScoringRubric): Promise<MicroQuestion[]> {
     if (!process.env.OPENAI_API_KEY || articles.length === 0) return [];
 
+    const prefs = getPreferences();
+
     try {
         const response = await openai.chat.completions.create({
             model: "gpt-3.5-turbo-0125",
             messages: [
                 {
                     role: "system",
-                    content: `You are an active learning agent. Analyze these articles and the current rubric: ${JSON.stringify(rubric)}.
-Find ambiguities or clusters of interest that aren't well-defined.
-Propose 1-2 micro-questions to clarify user intent.
-Output JSON: {"questions": [{"id": "uniq_id", "question": "...", "options": ["...", "..."], "context": "...", "topic": "..."}]}`
-                },
-                {
-                    role: "user",
-                    content: articles.map(a => `Title: ${a.title} | Score: ${a.score}`).join('\n')
+                    content: `You are a Curator-Learner Agent. Your goal is to refine the user's interest model by asking high-level micro-questions.
+Current Interest Model:
+Stable: "${prefs.interestModel.stablePreferences}"
+Session: "${prefs.interestModel.sessionIntent}"
+
+Analyzed Article Topics (last feed):
+${articles.map(a => `- ${a.title} (${a.topic})`).join('\n')}
+
+INSTRUCTIONS:
+1. DO NOT ask "Reading Comprehension" questions about article content (e.g., "What are the features of X?").
+2. DO NOT ask questions that can be answered by reading the article title.
+3. DO focus on CATEGORICAL AMBIGUITIES and USER PREFERENCE TRADE-OFFS.
+4. Focus on "Why" and "More/Less":
+   - "We see many articles on [X]. Do you want more technical depth or more high-level news on this?"
+   - "You seem interested in [X], but we also found [Y]. Should we prioritize [Y] in your session intent?"
+5. Keep options concise (2-4 options).
+
+Output JSON: {"questions": [{"id": "uniq_id", "question": "...", "options": ["...", "..."], "context": "Reason for asking based on interests", "topic": "Category"}]}`
                 }
             ],
             response_format: { type: "json_object" }

@@ -80,12 +80,19 @@ function calculateScore(item: any, site: SiteConfig, prefs: UserPreferences): nu
     let score = 0;
     const date = item.publishedAt ? new Date(item.publishedAt) : new Date();
     const hoursAgo = (Date.now() - date.getTime()) / (1000 * 60 * 60);
+
+    // Recency is primary (0 to 100)
     score += Math.max(0, 100 - hoursAgo);
 
-    if (prefs.siteScores[site.url]) score += prefs.siteScores[site.url] * 10;
-    if (prefs.demotedSites.includes(site.url)) score -= 50;
-    if (prefs.demotedTopics.includes(site.category)) score -= 50;
-    if (prefs.topicScores[site.category]) score += prefs.topicScores[site.category] * 10;
+    // User favorites (reduced weight for initial pass to maintain diversity)
+    if (prefs.siteScores[site.url]) score += prefs.siteScores[site.url] * 5;
+    if (prefs.topicScores[site.category]) score += prefs.topicScores[site.category] * 5;
+
+    if (prefs.demotedSites.includes(site.url)) score -= 100; // Stronger demotion
+    if (prefs.demotedTopics.includes(site.category)) score -= 100;
+
+    // Tie-breaker and slight noise for diversity
+    score += Math.random() * 5;
 
     return score;
 }

@@ -17,6 +17,12 @@ export function getSites(): SiteConfig[] {
         });
 }
 
+export function getCategories(): string[] {
+    const sites = getSites();
+    const cats = new Set(sites.map(s => s.category));
+    return Array.from(cats);
+}
+
 export function addSiteToDisk(url: string, category: string) {
     const line = `\n${url}|${category}`;
     fs.appendFileSync(SITES_FILE, line);

@@ -49,13 +49,23 @@ Snake Crawler is a modern, high-performance RSS and news aggregator built with *
 
 ### Running Locally
 
-To start the development server:
-
+#### Development Mode
+To start the development server with hot-reloading:
 ```bash
 npm run dev
 ```
+Open [http://localhost:3001](http://localhost:3001) in your browser.
 
-Open [http://localhost:3001](http://localhost:3001) with your browser to see the dashboard.
+#### Production Mode
+To build and run the optimized production application:
+```bash
+# 1. Generate the production build
+npm run build
+
+# 2. Start the production server
+npm run start
+```
+Alternatively, you can use the provided script: `bash scripts/start-app.sh`.
 
 ### Adding New Sites
 
