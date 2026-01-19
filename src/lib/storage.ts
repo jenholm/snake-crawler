@@ -28,7 +28,13 @@ const DEFAULT_PREFS: UserPreferences = {
     demotedTopics: [],
     siteScores: {},
     topicScores: {},
-    clickHistory: []
+    clickHistory: [],
+    interestModel: {
+        stablePreferences: "",
+        sessionIntent: ""
+    },
+    sourceReputation: {},
+    pendingQuestions: []
 };
 
 export function getPreferences(): UserPreferences {
@@ -37,6 +43,17 @@ export function getPreferences(): UserPreferences {
     }
     try {
         const data = JSON.parse(fs.readFileSync(STORE_FILE, 'utf-8'));
+        // Handle migration from old userProfile string to the new InterestModel if needed
+        if (data.userProfile && !data.interestModel) {
+            data.interestModel = {
+                stablePreferences: data.userProfile,
+                sessionIntent: ""
+            };
+            delete data.userProfile;
+            const migratedPrefs = { ...DEFAULT_PREFS, ...data };
+            savePreferences(migratedPrefs);
+            return migratedPrefs;
+        }
         return { ...DEFAULT_PREFS, ...data };
     } catch (e) {
         return DEFAULT_PREFS;
@@ -71,5 +88,34 @@ export function toggleBlockSite(siteUrl: string) {
     } else {
         prefs.blockedSites.push(siteUrl);
     }
+    savePreferences(prefs);
+}
+
+export function updateSourceReputation(sourceId: string, metrics: { passed?: boolean; score?: number }) {
+    const prefs = getPreferences();
+    if (!prefs.sourceReputation[sourceId]) {
+        prefs.sourceReputation[sourceId] = {
+            passRate: 1,
+            avgScore: 50,
+            userEngagement: 0,
+            totalTriaged: 0
+        };
+    }
+
+    const rep = prefs.sourceReputation[sourceId];
+    rep.totalTriaged += 1;
+
+    if (metrics.passed !== undefined) {
+        // Rolling average for pass rate
+        const alpha = 0.1;
+        const currentPass = metrics.passed ? 1 : 0;
+        rep.passRate = (1 - alpha) * rep.passRate + alpha * currentPass;
+    }
+
+    if (metrics.score !== undefined) {
+        // Weighted average for score
+        rep.avgScore = (rep.avgScore * (rep.totalTriaged - 1) + metrics.score) / rep.totalTriaged;
+    }
+
     savePreferences(prefs);
 }

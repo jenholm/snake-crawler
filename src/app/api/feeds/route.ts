@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchAllArticles } from '@/lib/feed';
+import { refineInterestModel } from '@/lib/ai';
 import {
     addSiteToDisk,
     getPreferences,
@@ -13,7 +14,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
     const articles = await fetchAllArticles();
-    return NextResponse.json(articles);
+    const prefs = getPreferences();
+    return NextResponse.json({
+        articles,
+        questions: prefs.pendingQuestions || []
+    });
 }
 
 export async function POST(req: NextRequest) {
@@ -52,6 +57,22 @@ export async function POST(req: NextRequest) {
 
         case 'add-site':
             addSiteToDisk(payload.url, payload.category);
+            break;
+
+        case 'answer-question':
+            const question = prefs.pendingQuestions.find(q => q.id === payload.id);
+            if (question) {
+                // 1. Remove from pending
+                prefs.pendingQuestions = prefs.pendingQuestions.filter(q => q.id !== payload.id);
+                // 2. Refine interest model using AI
+                const refinedModel = await refineInterestModel(prefs.interestModel, question, payload.answer);
+                if (refinedModel) {
+                    prefs.interestModel = refinedModel;
+                    // Rubric will be regenerated on next scoring pass
+                    prefs.currentRubric = undefined;
+                }
+                savePreferences(prefs);
+            }
             break;
 
         default:

@@ -1,0 +1,14 @@
+[Unit]
+Description=Snake Crawler App
+After=network.target
+
+[Service]
+Type=simple
+User=jenholm
+WorkingDirectory=/home/jenholm/snake-crawler
+ExecStart=/home/jenholm/snake-crawler/scripts/start-app.sh
+Restart=on-failure
+Environment=NODE_ENV=production
+
+[Install]
+WantedBy=multi-user.target

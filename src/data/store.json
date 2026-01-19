@@ -49,5 +49,18 @@
     "DIY": 1.5,
     "Technically YouTube": 0.5
   },
-  "clickHistory": []
+  "clickHistory": [],
+  "interestModel": {
+    "stablePreferences": "I am interested in space exploration, rocket launches, NASA missions, and the latest in science and technology. I also enjoy gaming and exploring programming languages in software development.",
+    "sessionIntent": "Exploring programming languages in software development"
+  },
+  "sourceReputation": {
+    "https://www.ifixit.com/blog/feed/": {
+      "passRate": 1,
+      "avgScore": 80,
+      "userEngagement": 0,
+      "totalTriaged": 1
+    }
+  },
+  "pendingQuestions": []
 }

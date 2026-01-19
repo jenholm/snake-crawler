@@ -3,6 +3,7 @@ import * as cheerio from 'cheerio';
 import axios from 'axios';
 import { Article, SiteConfig, UserPreferences } from './types';
 import { getPreferences, getSites } from './storage';
+import { scoreArticlesWithAI, planNextLinks } from './ai';
 
 const parser = new Parser({
     customFields: {
@@ -89,6 +90,27 @@ function calculateScore(item: any, site: SiteConfig, prefs: UserPreferences): nu
     return score;
 }
 
+// Helper to cleaning extraction
+function cleanReadableText(html: string): string {
+    const $ = cheerio.load(html);
+    // Remove scripts, styles, nav, footer
+    $('script, style, nav, footer, header, aside, .ads, .comments').remove();
+    let text = $('main, article, .content, .post-body').text() || $('body').text();
+    return text.replace(/\s+/g, ' ').trim();
+}
+
+async function fetchFullText(url: string): Promise<string> {
+    try {
+        const res = await axios.get(url, {
+            timeout: 5000,
+            headers: { 'User-Agent': USER_AGENT }
+        });
+        return cleanReadableText(res.data);
+    } catch {
+        return "";
+    }
+}
+
 async function scrapeHtml(html: string, site: SiteConfig): Promise<Article[]> {
     const $ = cheerio.load(html);
     const articles: Article[] = [];
@@ -97,8 +119,6 @@ async function scrapeHtml(html: string, site: SiteConfig): Promise<Article[]> {
     // Heuristic: Look for common article patterns
     // We look for 'article' tags, or divs with 'post', 'article' classes
     // Inside them, we look for an 'a' tag with substantial text (title)
-
-    // Simplified scraping strategy: Find all 'a' tags inside common containers
     $('article, .post, .entry, .card, .item, main > div').each((_, el) => {
         if (articles.length >= 10) return; // Limit scraped items
 
@@ -143,11 +163,36 @@ async function scrapeHtml(html: string, site: SiteConfig): Promise<Article[]> {
             imageUrl: img,
             summary: cleanSummary(summary),
             publishedAt,
-            score: calculateScore(item, site, prefs)
+            score: calculateScore(item, site, prefs),
+            seoFlags: []
         });
     });
 
     return articles;
+}
+
+// Helper for Phase 3: Extract links from high-quality articles
+function extractLinks(html: string, baseUrl: string): Array<{ url: string, context: string }> {
+    const $ = cheerio.load(html);
+    const links: Array<{ url: string, context: string }> = [];
+
+    $('a').each((_, el) => {
+        const $el = $(el);
+        let href = $el.attr('href');
+        if (!href) return;
+
+        try {
+            const url = new URL(href, baseUrl).href;
+            if (url.startsWith('http') && !url.includes(new URL(baseUrl).host)) {
+                links.push({
+                    url,
+                    context: $el.parent().text().slice(0, 100).trim()
+                });
+            }
+        } catch { }
+    });
+
+    return links.slice(0, 20); // Limit per page
 }
 
 async function discoverFeed(html: string, baseUrl: string): Promise<string | null> {
@@ -318,7 +363,8 @@ export async function fetchAllArticles(): Promise<Article[]> {
                         imageUrl: imageUrl,
                         summary: summary.substring(0, 300) + (summary.length > 300 ? '...' : ''),
                         publishedAt: item.isoDate || new Date().toISOString(),
-                        score
+                        score,
+                        seoFlags: []
                     } as Article;
                 }));
                 allArticles.push(...siteArticles);
@@ -330,32 +376,84 @@ export async function fetchAllArticles(): Promise<Article[]> {
 
     await Promise.all(promises);
 
-    // Shuffle the results for discovery
+    // Shuffle and Deduplicate
     for (let i = allArticles.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [allArticles[i], allArticles[j]] = [allArticles[j], allArticles[i]];
     }
 
-    // Deduplicate articles based on URL and ID
     const uniqueArticles: Article[] = [];
-    const seenIds = new Set<string>();
     const seenUrls = new Set<string>();
 
     for (const article of allArticles) {
-        // Prepare checks
-        const id = article.id;
-        const url = article.url;
-
-        // If we have a real URL, ensure it's unique
-        if (url && seenUrls.has(url)) continue;
-        // If ID is already used, skip (or generate new? Better to skip dupes)
-        if (seenIds.has(id)) continue;
-
-        seenIds.add(id);
-        if (url) seenUrls.add(url);
+        if (article.url && seenUrls.has(article.url)) continue;
+        if (article.url) seenUrls.add(article.url);
         uniqueArticles.push(article);
     }
 
-    // Return random selection up to limit
-    return uniqueArticles.slice(0, 200);
+    // AI Personalization Layer
+    // 1. First Pass: Metadata Triage & Initial Scoring
+    let personalizedArticles = await scoreArticlesWithAI(uniqueArticles);
+
+    // 2. Depth-on-Demand: Fetch full text for 'good' articles to enable Content Cards
+    const highPotential = personalizedArticles
+        .filter(a => a.triageStatus === 'good')
+        .slice(0, 10);
+
+    const adaptiveLinks: string[] = [];
+
+    await Promise.all(highPotential.map(async (article) => {
+        if (article.url) {
+            try {
+                const res = await axios.get(article.url, { timeout: 5000, headers: { 'User-Agent': USER_AGENT } });
+                article.fullText = cleanReadableText(res.data);
+
+                // Phase 3: Extract links for adaptive crawling
+                const links = extractLinks(res.data, article.url);
+                const planned = await planNextLinks(links, prefs.currentRubric!);
+                adaptiveLinks.push(...planned);
+            } catch (e: any) {
+                console.error(`Adaptive fetch failed for ${article.url}:`, e.message);
+            }
+        }
+    }));
+
+    // Phase 3: Follow adaptive links (Limited discovery crawl)
+    if (adaptiveLinks.length > 0) {
+        console.log(`[Adaptive Crawl] Following ${adaptiveLinks.length} links...`);
+        const discoveryPromises = adaptiveLinks.slice(0, 5).map(async (url) => {
+            try {
+                const res = await axios.get(url, { timeout: 5000, headers: { 'User-Agent': USER_AGENT } });
+                const $ = cheerio.load(res.data);
+                const title = $('title').text().trim();
+                if (title && title.length > 10) {
+                    uniqueArticles.push({
+                        id: url,
+                        title,
+                        url,
+                        sourceId: 'adaptive-crawl',
+                        sourceName: 'Discovery',
+                        topic: 'Discovery',
+                        publishedAt: new Date().toISOString(),
+                        score: 50, // Base discovery score
+                        seoFlags: []
+                    });
+                }
+            } catch { }
+        });
+        await Promise.all(discoveryPromises);
+
+        // Final re-score with discovery items
+        personalizedArticles = await scoreArticlesWithAI(uniqueArticles);
+    } else if (highPotential.some(a => a.fullText)) {
+        // 3. Second Pass: Re-score with full text (Content Cards)
+        // Only re-score if we actually fetched something new and didn't crawl further
+        personalizedArticles = await scoreArticlesWithAI(personalizedArticles);
+    }
+
+    // Sort by final score
+    personalizedArticles.sort((a, b) => b.score - a.score);
+    console.log(`[Feed Engine] Final delivery: ${personalizedArticles.length} articles.`);
+
+    return personalizedArticles.slice(0, 200);
 }

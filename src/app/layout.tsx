@@ -6,7 +6,7 @@ const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Snake Crawler",
-  description: "Aggregated news dashboard",
+  description: "AI Aggregated feed dashboard",
   icons: {
     icon: "/bridge-icon.png",
   },

@@ -14,11 +14,14 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog";
-import { Plus, RefreshCw, Loader2 } from "lucide-react";
+import { Plus, RefreshCw, Loader2, Brain } from "lucide-react";
 import { BridgeAnimation } from "./BridgeAnimation";
+import { MicroQuestionCard } from "./MicroQuestionCard";
+import { MicroQuestion } from "@/lib/types";
 
 export function Dashboard() {
     const [articles, setArticles] = useState<Article[]>([]);
+    const [questions, setQuestions] = useState<MicroQuestion[]>([]);
     const [loading, setLoading] = useState(true);
     const [newSiteUrl, setNewSiteUrl] = useState("");
     const [newSiteCategory, setNewSiteCategory] = useState("");
@@ -28,7 +31,8 @@ export function Dashboard() {
         setLoading(true);
         try {
             const res = await axios.get('/api/feeds');
-            setArticles(res.data);
+            setArticles(res.data.articles || []);
+            setQuestions(res.data.questions || []);
         } catch (e) {
             console.error("Failed to fetch", e);
         } finally {
@@ -65,6 +69,19 @@ export function Dashboard() {
 
         } catch (e) {
             console.error("Action failed", e);
+        }
+    };
+
+    const handleAnswerQuestion = async (id: string, answer: string) => {
+        try {
+            // FIRE AND FORGET - but also remove locally for smooth UI
+            setQuestions(prev => prev.filter(q => q.id !== id));
+            await axios.post('/api/feeds', {
+                action: 'answer-question',
+                payload: { id, answer }
+            });
+        } catch (e) {
+            console.error("Failed to answer question", e);
         }
     };
 
@@ -112,7 +129,7 @@ export function Dashboard() {
 
                         <div className="text-center md:text-left">
                             <h1 className="text-4xl font-extrabold tracking-tight lg:text-6xl">Snake Crawler</h1>
-                            <p className="text-muted-foreground text-lg">Aggregated feeds prioritized for you.</p>
+                            <p className="text-muted-foreground text-lg">Aggregated, scored and filtered by AI.</p>
                         </div>
                     </div>
 
@@ -160,6 +177,18 @@ export function Dashboard() {
                     </div>
                 </div>
             </header>
+
+            {!loading && questions.length > 0 && (
+                <div className="mb-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-in fade-in slide-in-from-top-4">
+                    {questions.map(q => (
+                        <MicroQuestionCard
+                            key={q.id}
+                            question={q}
+                            onAnswer={handleAnswerQuestion}
+                        />
+                    ))}
+                </div>
+            )}
 
             {loading && articles.length === 0 ? (
                 <div className="flex h-64 items-center justify-center">
